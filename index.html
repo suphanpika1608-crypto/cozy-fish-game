@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>มินิเกม: แยกแยะประเภทปลาตามหลักอนุกรมวิธาน</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #f0f8ff;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        h1 {
+            color: #00509e;
+            margin-bottom: 10px;
+        }
+
+        .status-bar {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 25px;
+            background: #fff;
+            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        #time { color: #d32f2f; }
+        #score { color: #2e7d32; }
+
+        .game-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 900px;
+            margin: 0 auto;
+            height: 350px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        .drop-zone {
+            width: 32%;
+            height: 100%;
+            border: 3px dashed #b0bec5;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 22px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .drop-zone.dragover {
+            transform: scale(1.02);
+            border-style: solid;
+        }
+
+        #Chondrichthyes {
+            background-color: #fff3e0;
+            border-color: #ff9800;
+            color: #e65100;
+        }
+        #Chondrichthyes.dragover { background-color: #ffe0b2; }
+
+        #Osteichthyes {
+            background-color: #e3f2fd;
+            border-color: #2196f3;
+            color: #0d47a1;
+        }
+        #Osteichthyes.dragover { background-color: #bbdefb; }
+
+        .center-stage {
+            width: 30%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .fish-card {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ffd54f 0%, #ffca28 100%);
+            color: #424242;
+            border-radius: 50px;
+            font-size: 26px;
+            font-weight: 700;
+            cursor: grab;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            user-select: none;
+            transition: transform 0.1s;
+        }
+
+        .fish-card:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+
+        .btn {
+            padding: 12px 35px;
+            font-size: 20px;
+            font-weight: 600;
+            font-family: 'Sarabun', sans-serif;
+            border: none;
+            background-color: #0277bd;
+            color: white;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.2s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn:hover {
+            background-color: #01579b;
+            transform: translateY(-2px);
+        }
+
+        #game-over-screen {
+            display: none;
+            margin-top: 30px;
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        .final-score-text { color: #0277bd; font-size: 32px;}
+    </style>
+</head>
+<body>
+
+    <h1>เกมแยกแยะประเภทปลาตามหลักอนุกรมวิธาน</h1>
+    <p>ลากชื่อปลาไปใส่ในโซนที่ถูกต้องให้ได้คะแนนมากที่สุดใน 60 วินาที!</p>
+    
+    <div class="status-bar">
+        ⏳ เวลา: <span id="time">60</span> วินาที | 🏆 คะแนน: <span id="score">0</span>
+    </div>
+    
+    <div class="game-board" id="game-board">
+        <!-- โซนปลากระดูกอ่อน -->
+        <div class="drop-zone" id="Chondrichthyes">
+            🐟 ปลากระดูกอ่อน<br><span style="font-size: 16px;">(Chondrichthyes)</span>
+        </div>
+        
+        <!-- โซนสุ่มปลา -->
+        <div class="center-stage">
+            <div id="fish-spawn-area">
+                <!-- ปลาจะโผล่ตรงนี้ -->
+                <button class="btn" id="start-btn" onclick="startGame()">เริ่มเกมเลย!</button>
+            </div>
+        </div>
+        
+        <!-- โซนปลากระดูกแข็ง -->
+        <div class="drop-zone" id="Osteichthyes">
+            🐠 ปลากระดูกแข็ง<br><span style="font-size: 16px;">(Osteichthyes)</span>
+        </div>
+    </div>
+
+    <div id="game-over-screen">
+        <p>หมดเวลา! 🎉</p>
+        <p>คะแนนรวมของคุณคือ: <span class="final-score-text" id="final-score">0</span> คะแนน</p>
+        <button class="btn" onclick="startGame()" style="margin-top: 15px;">เล่นอีกครั้ง</button>
+    </div>
+
+    <script>
+        // ฐานข้อมูลปลา
+        const fishDatabase = [
+            // ปลากระดูกอ่อน
+            { name: "ปลาฉลาม", type: "Chondrichthyes" },
+            { name: "ปลากระเบน", type: "Chondrichthyes" },
+            { name: "ปลาฉนาก", type: "Chondrichthyes" },
+            { name: "ปลากระต่าย", type: "Chondrichthyes" },
+            { name: "ฉลามวาฬ", type: "Chondrichthyes" },
+            // ปลากระดูกแข็ง
+            { name: "ปลานิล", type: "Osteichthyes" },
+            { name: "ปลาทับทิม", type: "Osteichthyes" },
+            { name: "ปลาตะเพียน", type: "Osteichthyes" },
+            { name: "ปลาแซลมอน", type: "Osteichthyes" },
+            { name: "ปลาดุก", type: "Osteichthyes" },
+            { name: "ปลาทูน่า", type: "Osteichthyes" },
+            { name: "ปลาช่อน", type: "Osteichthyes" },
+            { name: "ปลากะพง", type: "Osteichthyes" }
+        ];
+
+        let currentScore = 0;
+        let timeLeft = 60;
+        let gameTimer;
+        let activeFish = null;
+        let isGameRunning = false;
+
+        const scoreElement = document.getElementById('score');
+        const timeElement = document.getElementById('time');
+        const spawnArea = document.getElementById('fish-spawn-area');
+        const gameOverScreen = document.getElementById('game-over-screen');
+        const finalScoreElement = document.getElementById('final-score');
+        const dropZones = document.querySelectorAll('.drop-zone');
+
+        function startGame() {
+            // รีเซ็ตค่าเริ่มต้น
+            currentScore = 0;
+            timeLeft = 60;
+            isGameRunning = true;
+            scoreElement.innerText = currentScore;
+            timeElement.innerText = timeLeft;
+            gameOverScreen.style.display = 'none';
+            
+            // เริ่มสุ่มปลา
+            spawnNextFish();
+            
+            // จัดการเวลา
+            clearInterval(gameTimer);
+            gameTimer = setInterval(() => {
+                timeLeft--;
+                timeElement.innerText = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function spawnNextFish() {
+            if (!isGameRunning) return;
+            
+            // สุ่มปลาจากฐานข้อมูล
+            const randomIndex = Math.floor(Math.random() * fishDatabase.length);
+            activeFish = fishDatabase[randomIndex];
+            
+            // สร้าง Element ปลาขึ้นมาใหม่และตั้งให้ลากได้
+            spawnArea.innerHTML = `<div class="fish-card" draggable="true" id="draggable-fish">${activeFish.name}</div>`;
+            
+            const fishCardElement = document.getElementById('draggable-fish');
+            
+            // จับ Event ตอนเริ่มลาก
+            fishCardElement.addEventListener('dragstart', (e) => {
+                e.dataTransfer.setData('text/plain', activeFish.type);
+                setTimeout(() => e.target.style.opacity = '0.4', 0);
+            });
+
+            fishCardElement.addEventListener('dragend', (e) => {
+                e.target.style.opacity = '1';
+            });
+        }
+
+        // จัดการระบบ Drop Zone ทั้ง 2 ฝั่ง
+        dropZones.forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault(); // อนุญาตให้วางได้
+                zone.classList.add('dragover');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                
+                if (!isGameRunning) return;
+
+                const draggedFishType = e.dataTransfer.getData('text/plain');
+                const targetZoneType = zone.id;
+
+                // ตรวจสอบความถูกต้อง
+                if (draggedFishType === targetZoneType) {
+                    currentScore += 10;
+                    flashZone(zone, '#c8e6c9'); // กระพริบสีเขียวเมื่อถูก
+                } else {
+                    currentScore -= 5;
+                    flashZone(zone, '#ffcdd2'); // กระพริบสีแดงเมื่อผิด
+                }
+                
+                scoreElement.innerText = currentScore;
+                spawnNextFish(); // สุ่มตัวต่อไปทันที
+            });
+        });
+
+        function flashZone(zoneElement, color) {
+            const originalColor = zoneElement.style.backgroundColor;
+            zoneElement.style.backgroundColor = color;
+            setTimeout(() => {
+                zoneElement.style.backgroundColor = originalColor;
+            }, 300);
+        }
+
+        function endGame() {
+            isGameRunning = false;
+            clearInterval(gameTimer);
+            spawnArea.innerHTML = '';
+            gameOverScreen.style.display = 'block';
+            finalScoreElement.innerText = currentScore;
+        }
+    </script>
+</body>
+</html>
